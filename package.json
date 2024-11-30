@@ -1,0 +1,34 @@
+{
+  "name": "passport-js-local-authentification-",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "ts-node index.ts",
+    "build": "tsc",
+    "serve": "node dist/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Lachi-Amine/passport-js-local-authentification-.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Lachi-Amine/passport-js-local-authentification-/issues"
+  },
+  "homepage": "https://github.com/Lachi-Amine/passport-js-local-authentification-#readme",
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.10.1",
+    "express": "^4.21.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.2"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.0.0",
+    "dotenv": "^16.4.5",
+    "nodemon": "^3.1.7",
+    "prisma": "^6.0.0"
+  }
+}
