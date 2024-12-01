@@ -1,35 +1,54 @@
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
+import { PrismaClient } from "@prisma/client";
 
-// Dummy user data
-const users = [
-  { id: "1", username: "test", password: "password123" }, // Plaintext password
-];
+const prisma = new PrismaClient();
 
 // Passport configuration
 passport.use(
-  new LocalStrategy((username, password, done) => {
-    const user = users.find((u) => u.username === username);
-    if (!user) {
-      return done(null, false, { message: "User not found" });
-    }
+  new LocalStrategy(
+    { usernameField: "email" }, // Specify "email" instead of "username"
+    async (email, password, done) => {
+      try {
+        // Find user by email
+        const user = await prisma.user.findUnique({
+          where: { email },
+        });
 
-    if (password === user.password) {
-      return done(null, user);
-    } else {
-      return done(null, false, { message: "Incorrect password" });
+        if (!user) {
+          return done(null, false, { message: "User not found" });
+        }
+
+        // Compare passwords (assuming plain-text passwords for now)
+        if (user.password === password) {
+          return done(null, user);
+        } else {
+          return done(null, false, { message: "Incorrect password" });
+        }
+      } catch (err) {
+        return done(err);
+      }
     }
-  })
+  )
 );
 
 passport.serializeUser((user: any, done) => {
   done(null, user.id);
 });
 
-passport.deserializeUser((id: string, done) => {
-  const user = users.find((u) => u.id === id);
-  if (user) return done(null, user);
-  done(null, false);
+passport.deserializeUser(async (id: string, done) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id },
+    });
+    if (user) {
+      done(null, user);
+    } else {
+      done(null, false);
+    }
+  } catch (err) {
+    done(err, false);
+  }
 });
 
 export default passport;

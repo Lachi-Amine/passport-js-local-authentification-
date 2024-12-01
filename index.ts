@@ -1,74 +1,67 @@
-import express, { Application, Request, Response } from 'express';
-import dotenv from 'dotenv';
-import { PrismaClient } from '@prisma/client';
-import session from 'express-session';
-import passport from 'passport';
-
+import express, { Application, Request, Response } from "express";
+import dotenv from "dotenv";
+import { PrismaClient } from "@prisma/client";
+import session from "express-session";
+import passport from "./passport";
 
 // Load environment variables
 dotenv.config();
 
 const app: Application = express();
+const prisma = new PrismaClient();
 const PORT = process.env.PORT || 3000;
 
 // Middlewares
 app.use(express.json());
-
-
-
-const prisma = new PrismaClient();
-
-//session
-app.use(session
-  ({
-    secret: 'secret',
-    resave  : false,
+app.use(
+  session({
+    secret: "secret",
+    resave: false,
     saveUninitialized: false,
-    cookie: {maxAge: 86400000}
-  }));
-
+    cookie: { maxAge: 86400000 }, // 1 day
+  })
+);
 app.use(passport.initialize());
 app.use(passport.session());
 
-// Health check
-app.get('/', (req: Request, res: Response) => {
-  res.send('Server is up and running!');
+// Routes
+app.get("/home", (req: Request, res: Response) => {
+  res.send("Success! You are logged in.");
 });
 
-// Create a new user
-app.post('/create', async (req: Request, res: Response) => {
-  try{
-    const {email, password} = req.body;
-    if (!email || !password) {
-      res.send("email or password is empty")
-   }
-    else{
-      const check= await prisma.user.findUnique({
-        where: {
-          email: email,
-        },
-      });
-      if(check){
-        res.send("user already exist");
-      }
-      else{
-      const user = await prisma.user.create({
-        data: {
-          email: email,
-          password: password,
-        },
-      });
-      res.json(user);
-    }
-    res.send("user created");
-      
-    }
-  }catch(e){
-    //nothing
-    console.log("err");
-    //fix later
+app.post("/login", (req: Request, res: Response) => {
+  passport.authenticate("local", {
+    successRedirect: "/home",
+    failureRedirect: "/login",
+  })(req, res);
+});
+
+app.post("/create", async( req:any,res:any) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).send("Email or password is missing");
   }
- 
+
+  try {
+    const existingUser = await prisma.user.findUnique({ where: { email } });
+
+    if (existingUser) {
+      return res.status(400).send("User already exists");
+    }
+
+    const newUser = await prisma.user.create({
+      data: {
+        email,
+        password,
+      },
+    });
+
+    res.status(201).json(newUser);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("An error occurred while creating the user");
+  }
 });
 
 // Start the server
