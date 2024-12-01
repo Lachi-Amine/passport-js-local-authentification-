@@ -2,6 +2,7 @@ import express, { Application, Request, Response } from 'express';
 import dotenv from 'dotenv';
 import { PrismaClient } from '@prisma/client';
 import session from 'express-session';
+import passport from 'passport';
 
 
 // Load environment variables
@@ -26,6 +27,8 @@ app.use(session
     cookie: {maxAge: 86400000}
   }));
 
+app.use(passport.initialize());
+app.use(passport.session());
 
 // Health check
 app.get('/', (req: Request, res: Response) => {
